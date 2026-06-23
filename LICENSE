@@ -1,0 +1,22 @@
+LICENSE PLACEHOLDER -- choose before publishing.
+
+The prior SWATGenX reproducibility material is released under the MIT License
+(see publication/LICENSE). The same choice is suggested here for the code,
+scripts, and configuration in this repository, but the final license is left to
+the author. Replace this file with the chosen license text before public release.
+
+Suggested (MIT) header:
+
+    MIT License
+    Copyright (c) 2026 Vahid Rafiei
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction ...   [full MIT text]
+
+Note on scope: a chosen license would cover the code, scripts, configuration, and
+derived data/tables in this reproducibility repository. The typeset journal
+article, once published, is subject to the publisher's copyright and reuse terms;
+the author-prepared manuscript sources are provided to support reproducibility.
+
+The bundled MODFLOW 6 (USGS), PEST++ (USGS), and SWAT+ executables/inputs are
+covered by their own upstream licenses.

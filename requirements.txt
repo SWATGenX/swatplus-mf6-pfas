@@ -1,0 +1,26 @@
+# Python environment for the Rogue SWAT+ <-> MODFLOW 6 PFAS reproducibility repo.
+# Verified on Python 3.10.12 (Linux). Versions pinned to the production environment
+# that produced the manuscript results.
+#
+# Install:
+#   python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+#
+# You ALSO need the executables (not pip-installable here):
+#   - MODFLOW 6  (mf6 >= 6.7.0)         https://github.com/MODFLOW-USGS/modflow6
+#   - pestpp-ies (PEST++ >= 5.2)        https://github.com/usgs/pestpp   (flow calibration only)
+#   - SWAT+      (ifx -O3 build)        surface-water + in-stream PFAS engine
+# See scripts/build.sh for the toolchain notes.
+
+flopy==3.9.2          # MODFLOW 6 pre/post-processing (build + read the GWF/GWT decks)
+numpy==2.2.3
+pandas==2.2.3
+scipy==1.14.1         # scipy.optimize.nnls (joint SW+GW calibration)
+geopandas==1.0.1      # snap reach cells to SWAT+ channels (rivs1)
+fiona==1.10.1
+shapely==2.0.6
+pyproj==3.7.0
+pyarrow==17.0.0       # read Grids_MODFLOW_centroids.parquet
+matplotlib==3.9.2     # result figures
+pyemu==1.4.0          # PEST++ control-file setup (setup_rogue_pest.py)
+SALib==1.5.1          # (optional) sensitivity analysis utilities
+pytest==8.3.3         # tests/test_reproduce.py

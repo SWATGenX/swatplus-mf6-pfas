@@ -1,0 +1,4 @@
+# Uncompressed model tree is shipped as models/rogue_model_bundle.zip (extract locally)
+models/rogue/
+__pycache__/
+*.pyc

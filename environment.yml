@@ -1,0 +1,31 @@
+# Conda environment for the Rogue SWAT+ <-> MODFLOW 6 PFAS reproducibility repo.
+# Mirrors requirements.txt; the geospatial stack (geopandas/fiona/gdal) installs more
+# cleanly from conda-forge than from pip.
+#
+#   conda env create -f environment.yml
+#   conda activate swatmf6-repro
+#
+# The MODFLOW 6 (mf6), pestpp-ies, and SWAT+ executables are NOT conda-installed here
+# (mf6 is available on conda-forge if you prefer:  conda install -c conda-forge modflow6).
+# See scripts/build.sh for the toolchain.
+name: swatmf6-repro
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - flopy=3.9.2
+  - numpy=2.2.3
+  - pandas=2.2.3
+  - scipy=1.14.1
+  - geopandas=1.0.1
+  - fiona=1.10.1
+  - shapely=2.0.6
+  - pyproj=3.7.0
+  - pyarrow=17.0.0
+  - matplotlib=3.9.2
+  - pytest=8.3.3
+  - pip
+  - pip:
+      - pyemu==1.4.0
+      - SALib==1.5.1
+      # Optionally:  - modflow6   (or install mf6 from conda-forge above)

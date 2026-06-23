@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this reproducibility material, please cite the article below."
+title: "Coupled SWAT+ and MODFLOW 6 simulation of PFAS fate and transport in surface water and groundwater: the Rogue River, Michigan"
+type: software
+authors:
+  - family-names: Rafiei
+    given-names: Vahid
+    orcid: "https://orcid.org/0009-0009-8309-1895"
+    affiliation: "Independent Researcher"
+# repository-code: "https://github.com/<owner>/<repo>"   # set on publish
+url: "https://www.swatgenx.com"
+license: MIT          # CONFIRM before publishing (see LICENSE placeholder)
+date-released: "2026-06-23"
+keywords:
+  - SWAT+
+  - MODFLOW 6
+  - PFAS
+  - PFOS
+  - fate and transport
+  - groundwater-surface water coupling
+  - reproducibility
+  - Rogue River
+preferred-citation:
+  type: article
+  title: "Coupled SWAT+ and MODFLOW 6 simulation of PFAS fate and transport in surface water and groundwater: the Rogue River, Michigan"
+  authors:
+    - family-names: Rafiei
+      given-names: Vahid
+      orcid: "https://orcid.org/0009-0009-8309-1895"
+      affiliation: "Independent Researcher"
+  year: 2026
+  notes: "Journal, volume, and DOI to be added on acceptance."
