@@ -181,17 +181,15 @@ SWAT+ `TxtInOut` ~68 MB, observation/geometry data ~1 MB.
 
 ## Known gaps / things to verify locally
 
-- **Hard-coded workspace path.** The `phase3/` and `pest/` analysis scripts resolve
-  the model from the internal deployment path
-  `/data/SWATGenXApp/Users/admin/SWATplus_by_VPUID/0405/usgs_station/04118500`.
-  `scripts/common.sh` exposes `$SWATGENX_ROGUE_DIR`, but the underlying Python
-  scripts currently use the literal path. To run against the bundled
-  `models/rogue/` on another machine, edit the `ROGUE`/`CAL` constants at the top of
-  `phase3/phase3_rogue_pfas.py`, `phase3/joint_sw_gw_calibration.py`, and
-  `pest/build_rogue_calibrated.py` to point at your unzipped copy (the bundle keeps
-  the same `MODFLOW_sfr_cal` / `MODFLOW_rogue_pfas` / `MODFLOW_sfr` /
-  `SWAT_MODEL_Web_Application` layout under one root). This is the main
-  parameterization the public release should finish.
+- **Workspace path (now parameterized).** The `phase3/` and `pest/` analysis scripts and
+  `tests/test_reproduce.py` resolve the model from `$SWATGENX_ROGUE_DIR`, falling back to the
+  internal deployment path only when that variable is unset. To run against the bundled model on
+  another machine, unzip `models/rogue_model_bundle.zip` and point the scripts at it:
+  ```bash
+  export SWATGENX_ROGUE_DIR=/path/to/unzipped/rogue
+  ```
+  The bundle keeps the same `MODFLOW_sfr_cal` / `MODFLOW_rogue_pfas` / `MODFLOW_sfr` /
+  `SWAT_MODEL_Web_Application` layout under one root, so no source edits are needed.
 - **Transport run is order-dependent.** `run_transport.sh` must run **before**
   `run_joint_calibration.sh` (the joint fit reads `rogue_pfas_results.npz`), and
   `run_flow.sh` before `run_transport.sh` (it needs `MODFLOW_sfr_cal`).
