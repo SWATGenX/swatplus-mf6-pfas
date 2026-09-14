@@ -211,6 +211,11 @@ def main():
     _, b = copy_glob([f"{WA}/Watershed/Shapes/rivs1.*"],
                      os.path.join(DST, "data", "rivs1"), "channel network shapefile (rivs1)")
     total += b
+    # The watershed outline the coupling paper's Fig. 3 (paper/make_fig3_instream_map.py, ROGUE_SHAPES=<dir>) draws
+    # under the channel network. Without it the figure cannot be regenerated from the deposit (Q645, 2026-09-14).
+    _, b = copy_glob([f"{WA}/Watershed/Shapes/watershed_boundary.*"],
+                     os.path.join(DST, "data", "watershed_boundary"), "watershed boundary shapefile")
+    total += b
     _, b = copy_glob([f"{SRC}/Grids_MODFLOW_centroids.parquet"],
                      os.path.join(DST, "data"), "grid centroids (georeference)")
     total += b
