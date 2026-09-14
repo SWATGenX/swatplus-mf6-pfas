@@ -1,22 +1,35 @@
-LICENSE PLACEHOLDER -- choose before publishing.
+MIT License
 
-The prior SWATGenX reproducibility material is released under the MIT License
-(see publication/LICENSE). The same choice is suggested here for the code,
-scripts, and configuration in this repository, but the final license is left to
-the author. Replace this file with the chosen license text before public release.
+Copyright (c) 2026 Vahid Rafiei
 
-Suggested (MIT) header:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    MIT License
-    Copyright (c) 2026 Vahid Rafiei
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction ...   [full MIT text]
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-Note on scope: a chosen license would cover the code, scripts, configuration, and
-derived data/tables in this reproducibility repository. The typeset journal
-article, once published, is subject to the publisher's copyright and reuse terms;
-the author-prepared manuscript sources are provided to support reproducibility.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-The bundled MODFLOW 6 (USGS), PEST++ (USGS), and SWAT+ executables/inputs are
-covered by their own upstream licenses.
+---
+
+Scope. The CODE, scripts, and configuration in this repository are released
+under the MIT License above. The DATA products (model inputs/outputs, the
+calibrated flow field, and derived tables and figures) are released under the
+Creative Commons Attribution 4.0 International License (CC-BY-4.0,
+https://creativecommons.org/licenses/by/4.0/): share and adapt with credit.
+
+Third-party public inputs and tools (USGS, NHDPlus High Resolution, EPA ECHO,
+Michigan EGLE, MODFLOW 6, PEST++, the SWAT+ executable) remain under their own
+upstream licenses/terms. The typeset journal article, once published, is subject
+to the publisher's copyright and reuse terms; the author-prepared manuscript
+sources are provided here only to support reproducibility.

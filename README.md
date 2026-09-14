@@ -1,5 +1,9 @@
 # Coupled SWAT+ ↔ MODFLOW 6 PFAS fate & transport — reproducibility repository
 
+> **Versions.** Cite the concept DOI **10.5281/zenodo.20838388**, which always resolves to the latest version.
+> v1.0 is **10.5281/zenodo.20838389** (published 2026-06-25). This archive is the next version; `CHANGELOG.md`
+> lists what v1.0 lacked and the commits that fixed it.
+
 Reproduces the models, calibrations, and headline results of the manuscript
 
 > **Coupled SWAT+ and MODFLOW 6 simulation of PFAS fate and transport in surface
@@ -19,9 +23,9 @@ surface-water + groundwater PFAS mass balance on one watershed.
 | Result | Value |
 |---|---|
 | **Groundwater flow model** | MODFLOW 6, **~24,900 active cells**, SFR network of **1,506 reaches** built from the SWAT+ channel graph; generated automatically by MODGenX from public data |
-| **Flow calibration** (PEST++ ies, 243 pilot points + baseflow constraint) | head **Nash–Sutcliffe 0.91**, **RMSE 5.6 m** over 5,383 per-cell water-table observations; baseflow **+5.46** vs observed **5.56 m³/s** |
-| **GW transport** (MODFLOW 6 GWT, Freundlich sorption) | validated against **846 measured groundwater PFOS** obs: **1.1 dex** overall, **71% within ×10** (1.4 dex / 46% among above-background cells); SFT routes PFAS into **1,354 of 1,506** reaches |
-| **Joint SW+GW calibration** (NNLS over 7 mainstem reaches) | **g = 0.061** (95% CI [0.022, 0.100]), F(1,5)=16.2, p=0.01; mainstem log-RMSE **0.15 → 0.07 dex**; LOOCV held-out RMSE **6.2 → 4.5 ng/L**; fitted soil-loading L **0.11 → 0.077** |
+| **Flow calibration** (PEST++ ies, 243 pilot points + baseflow constraint) | head **RMSE 5.6 m**, **bias +0.9 m** (modelled minus observed) over **5,383** per-cell water-table observations spanning 125 m of head (Nash–Sutcliffe 0.91); baseflow **+5.46** vs observed **5.56 m³/s** |
+| **GW transport** (MODFLOW 6 GWT, Freundlich sorption) | compared with the **846 measured groundwater PFOS** observations (aggregated to 73 cells): the simulated House Street plume **spans the observed range** above the 10 ng/L background up to the prescribed source concentration and shows **no cell-level skill** (19 of 63 predicted cells are observed below the lowest simulated value, 9.3 ng/L, excluding two cells beside the prescribed source whose depth-maxima are set by numerical undershoot, disclosed in the manuscript's Supplementary Section S2.3); SFT carries the discharged PFOS into the SFR network |
+| **Joint SW+GW fit** (NNLS over 7 mainstem reaches) | a **fitted partition** of the in-stream PFOS signal, not a transport-model prediction of in-stream concentration: groundwater scale **g = 0.061**, soil-loading scale **L = 0.077**; the fitted groundwater share is 8–13 % at the five upstream stations and 53–55 % at the two lowest, a step at the plume rather than a gradient |
 
 **Coupling:** MODFLOW 6 **GWF6–GWT6** exchange via the BMI/XMI API; **SFR**
 (streamflow routing) + **SFT** (streamflow transport) carry the
@@ -56,12 +60,12 @@ reproducibility/
 │   ├── common.sh              shared env (binary/python paths, overridable)
 │   ├── build.sh               verify the mf6 / pestpp-ies / python toolchain (+ --help: from-source recipes)
 │   ├── make_model_bundle.py   (re)assemble models/rogue from the workspace + zip it
-│   ├── run_flow.sh            steady GWF flow → head NSE 0.91, baseflow +5.46 (~58 s)
-│   ├── run_transport.sh       40-yr GWT PFAS transport → plume validation + SFT
+│   ├── run_flow.sh            steady GWF flow → head RMSE 5.6 m, bias +0.9 m (NSE 0.91), baseflow +5.46 (~58 s)
+│   ├── run_transport.sh       40-yr GWT PFAS transport → plume range comparison + SFT
 │   ├── run_joint_calibration.sh  joint SW+GW NNLS → g = 0.061
 │   └── run_flow_calibration.sh   (optional/heavy) PEST++ ies flow inversion setup + command
 └── tests/
-    ├── test_reproduce.py      pytest: flow NSE 0.91 + joint g ≈ 0.061 within tolerance
+    ├── test_reproduce.py      pytest: flow RMSE 5.6 m / NSE 0.91 + joint g ≈ 0.061 within tolerance
     └── smoke_test.sh          shell equivalent (graceful SKIP if workspace/mf6 absent)
 ```
 
@@ -105,11 +109,13 @@ export SWATGENX_ROGUE_DIR=/path/to/your/rogue/workspace   # see "Models" below
 
 # 2. Steady-state groundwater flow  (~58 s)
 bash scripts/run_flow.sh
-#    -> head NSE ~0.91, RMSE ~5.6 m, baseflow ~+5.46 m3/s (observed 5.56)
+#    -> head RMSE ~5.6 m, bias ~+0.9 m, NSE ~0.91, baseflow ~+5.46 m3/s (observed 5.56)
 
 # 3. 40-year PFAS groundwater transport + in-stream routing
 bash scripts/run_transport.sh
-#    -> GW plume log-RMSE ~1.1 dex, ~71% within 10x; ~1,354 reaches carry PFOS
+#    -> GW plume compared with the 846 obs (73 cells): spans the observed range, no cell-level
+#       skill (the script also prints a log-RMSE and a within-10x fraction as its own diagnostics;
+#       the manuscript does not report them as skill); SFT in-stream loads
 
 # 4. Joint surface-water + groundwater calibration  (fast)
 bash scripts/run_joint_calibration.sh
@@ -138,10 +144,14 @@ bash scripts/run_flow_calibration.sh      # prints the setup + pestpp-ies comman
    `forward_run_rogue.py`, `build_rogue_calibrated.py`).
 3. **MODFLOW 6 GWT** runs Freundlich PFOS transport on that flow field with the
    source prescribed to the measured plume; **SFT** discharges PFAS into the SFR
-   reaches; validated against 846 GW PFOS obs (`phase3/phase3_rogue_pfas.py`).
-4. The **joint NNLS calibration** partitions the in-stream PFOS signal between the
+   reaches; compared with the 846 GW PFOS obs (`phase3/phase3_rogue_pfas.py`), a comparison
+   that establishes the plume's range, not cell-level skill.
+4. The **joint NNLS fit** partitions the in-stream PFOS signal between the
    surface-soil and groundwater pathways, fitting `C_i = (L/L0)·C_SW_i + g·B_i`
    over the 7 source-bearing mainstem reaches (`phase3/joint_sw_gw_calibration.py`).
+   The groundwater term is a fitted partition: `g` absorbs the gap between the transport
+   model's own in-stream concentration and the observations, so the share is not a
+   model prediction.
 
 ---
 
@@ -196,9 +206,10 @@ SWAT+ `TxtInOut` ~68 MB, observation/geometry data ~1 MB.
 - **PEST++ posterior files.** `build_rogue_calibrated.py` applies a specific
   posterior realization from `pest/rogue/control.3.par.csv`. Re-running the ies from
   scratch (`run_flow_calibration.sh`) produces a *new* ensemble; the committed
-  posterior is what reproduces head NSE 0.91 exactly.
-- **`/tmp/joint_calibration.npz`** is written world-writable `/tmp`; if a stale file
-  from another user exists, remove it first.
+  posterior is what reproduces head RMSE 5.6 m / NSE 0.91 exactly.
+- **`/tmp/joint_calibration.npz`** is written to world-writable `/tmp` (a stale file from
+  another user should be removed first); the committed copy the manuscript figures read is
+  `research/multianalyte_spike/joint_calibration_rogue.npz`, written by the same script.
 - **SWAT+ in-stream PFAS** is an engine add-on built with `ifx -O3`; a stock SWAT+
   binary runs the `TxtInOut` deck but does not emit the channel-PFAS outputs. The
   groundwater half of this repo (MODFLOW 6) is fully reproducible with stock USGS

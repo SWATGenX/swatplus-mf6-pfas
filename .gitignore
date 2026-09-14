@@ -2,3 +2,7 @@
 models/rogue/
 __pycache__/
 *.pyc
+# Local-only: agent edit stamps written by this checkout's hooks, and the Zenodo staging output
+# (built by ../scripts/stage_zenodo_v2.py; its manifest is tracked in the parent repo).
+.claude/
+zenodo_v2_staging/

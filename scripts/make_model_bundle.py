@@ -123,6 +123,36 @@ def copy_tree_filtered(src_dir, dst_dir, label, skip_ext=()):
     return n, nbytes
 
 
+def set_calibrated_run_settings(txtinout):
+    """Make the shipped SWAT+ deck run the way the paper's calibration ran (Q645, 2026-09-14).
+
+    time.sim: the 2000-2024 window of the forcing record (every weather file is nbyr 25 from 2000).
+    The source workspace carried a single year (1 2024 366 2024).
+    codes.bsn: pet=0, cn=2, the switches the calibrator (SWATGenX_SCV) applied on its run host and
+    never persisted. The stored build-time pet=1/cn=0 re-runs the calibrated parameters with different
+    ET/CN physics (task #27, 2026-08-12: daily NSE 0.61 / PBIAS +7% with 0/2 vs 0.05 / +43% with 1/0).
+    Columns are located by header name, and before/after values are printed so the change is visible.
+    """
+    ts = os.path.join(txtinout, "time.sim")
+    lines = open(ts).readlines()
+    print(f"  [time.sim] before: {lines[2].strip()}")
+    lines[2] = "       1      2000       366      2024         0\n"
+    open(ts, "w").writelines(lines)
+    print(f"  [time.sim] after:  {lines[2].strip()}")
+
+    cb = os.path.join(txtinout, "codes.bsn")
+    lines = open(cb).readlines()
+    head, vals = lines[1].split(), lines[2].split()
+    if len(head) != len(vals):
+        sys.exit(f"ERROR: codes.bsn header/value count mismatch ({len(head)} vs {len(vals)})")
+    for name, new in (("pet", "0"), ("cn", "2")):
+        i = head.index(name)
+        print(f"  [codes.bsn] {name}: {vals[i]} -> {new}")
+        vals[i] = new
+    lines[2] = "  ".join(vals) + "\n"
+    open(cb, "w").writelines(lines)
+
+
 def main():
     print(f"source workspace: {ROGUE}")
     if not os.path.isdir(ROGUE):
@@ -152,16 +182,31 @@ def main():
                      os.path.join(DST, "swat", "MODFLOW_sfr"), "swat grid centroids")
     total += b
     # TxtInOut holds BOTH SWAT+ inputs and last-run diagnostics; keep only inputs.
-    # .tmp = MODFLOW grid scratch; .out/.nc/.fin = SWAT+ run outputs (regenerable).
+    # .out/.nc/.fin = SWAT+ run outputs (regenerable). .tmp is NOT skipped: in SWAT+ it is the
+    # daily max/min temperature input named by weather-sta.cli. An earlier version skipped it as
+    # "MODFLOW grid scratch"; that rule matched the 100 PRISM temperature files and nothing else,
+    # and shipped a bundle whose SWAT+ model could not run (Q645, 2026-09-14).
     _, b = copy_tree_filtered(TXTINOUT, os.path.join(DST, "swat", "TxtInOut"),
                               "swat/TxtInOut (SWAT+ engine inputs)",
-                              skip_ext=(".txt.bak", ".log", ".tmp", ".out", ".nc", ".fin"))
+                              skip_ext=(".txt.bak", ".log", ".out", ".nc", ".fin"))
     total += b
+    set_calibrated_run_settings(os.path.join(DST, "swat", "TxtInOut"))
 
     # 4. Observation + geometry data the calibration/validation scripts read.
     _, b = copy_glob([f"{WA}/pfas_gw_data/pfas_gw_PFOS.csv",
                       f"{WA}/pfas_gw_data/pfas_gw_assignment.csv"],
                      os.path.join(DST, "data"), "groundwater PFOS observations")
+    total += b
+    # The in-stream network the paper reports as 29 sampled stations on 20 reaches: 31 EGLE
+    # surface-water stations snapped to 22 channels, 29 with quantified PFOS on 20 (Q645, 2026-09-14).
+    _, b = copy_glob([f"{WA}/pfas_data/pfas_stations_assignment.csv"],
+                     os.path.join(DST, "data"), "surface-water station assignment (29 stations / 20 reaches)")
+    total += b
+    # The SWAT+ streamflow calibration record behind the paper's Methods sentence (calibration 2018-2024, daily
+    # NSE 0.67; verification 2003-2017, daily NSE 0.43-0.48). A skill number the deposit cannot reproduce is the
+    # same class of defect as the lost depth grid (Q645, 2026-09-14).
+    _, b = copy_glob([f"{ROGUE}/CentralPerformance.txt", f"{ROGUE}/calval_settings_snapshot.json"],
+                     os.path.join(DST, "data"), "SWAT+ streamflow calibration record")
     total += b
     _, b = copy_glob([f"{WA}/Watershed/Shapes/rivs1.*"],
                      os.path.join(DST, "data", "rivs1"), "channel network shapefile (rivs1)")
