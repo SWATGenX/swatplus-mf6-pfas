@@ -226,7 +226,9 @@ SWAT+ `TxtInOut` ~68 MB, observation/geometry data ~1 MB.
   posterior is what reproduces head RMSE 5.6 m / NSE 0.91 exactly.
 - **`joint_calibration.npz`** is written to `results/joint_calibration/` (`JOINT_OUT_DIR` overrides it); the
   committed copy the manuscript figures and Table S4 read is `research/multianalyte_spike/joint_calibration_rogue.npz`
-  (g 0.0717, L 0.1804, the final leg), written by the same script when run without `--out-dir`.
+  (g 0.0717, L 0.1804, the final leg), written by the same script's default run (no `--out-dir`): the script's
+  DEFAULT column is the final leg's, read from the committed `channel_pfos_sx25_w1719.csv`; the reviewed column
+  (g 0.061 / L 0.077) is fitted only with the explicit `--reviewed-column` flag.
 - **SWAT+ in-stream PFAS** is an engine add-on built with `ifx -O3`; a stock SWAT+
   binary runs the `TxtInOut` deck but does not emit the channel-PFAS outputs. The
   groundwater half of this repo (MODFLOW 6) is fully reproducible with stock USGS

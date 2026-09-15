@@ -60,7 +60,7 @@ def test_flow_calibration():
 def test_joint_calibration():
     """joint_sw_gw_calibration.py on the FINAL leg's surface-water column reproduces g ~ 0.072 and L ~ 0.180
     (research/sw_rerun/results-2026-09-15/sweep/jointfit/sx25_w1719_stats.txt). Broken build: the reviewed column
-    (no --sw-mod) returns g 0.061 / L 0.077, outside both tolerances."""
+    (--reviewed-column) returns g 0.0612 / L 0.0771, outside both tolerances (g abs 0.005, L abs 0.02)."""
     import csv, tempfile
     pytest.importorskip("flopy")
     pytest.importorskip("geopandas")
@@ -70,14 +70,16 @@ def test_joint_calibration():
     sw_csv = os.path.join(PAPER, "research", "sw_rerun", "results-2026-09-15", "sweep", "channel_pfos_sx25_w1719.csv")
     cp = {int(r["Channel"]): float(r["pfos_ngL"]) for r in csv.DictReader(open(sw_csv))}
     sw_mod = ",".join(f"{cp[c]:.4f}" for c in (26, 18, 15, 11, 10, 2, 1))
-    out_dir = tempfile.mkdtemp(prefix="joint_calibration_")
-    out = _run(os.path.join(PAPER, "phase3"), "joint_sw_gw_calibration.py", "--sw-mod", sw_mod, "--out-dir", out_dir, "--label", "test")
-    print(out)
-    npz = os.path.join(out_dir, "joint_calibration.npz")
-    assert os.path.isfile(npz), "joint_calibration.npz not written"
-    d = np.load(npz)
-    g, L = float(d["g"]), float(d["L"])
-    assert g == pytest.approx(0.072, abs=0.01), f"GW effectiveness g {g} != ~0.072"
+    with tempfile.TemporaryDirectory(prefix="joint_calibration_") as out_dir:
+        out = _run(os.path.join(PAPER, "phase3"), "joint_sw_gw_calibration.py", "--sw-mod", sw_mod, "--out-dir", out_dir, "--label", "test")
+        print(out)
+        npz = os.path.join(out_dir, "joint_calibration.npz")
+        assert os.path.isfile(npz), "joint_calibration.npz not written"
+        d = np.load(npz)
+        g, L = float(d["g"]), float(d["L"])
+    # L is the load-bearing assertion (0.180 against the reviewed 0.077); g's tolerance is set so the reviewed column's
+    # 0.0612 fails it too (every recalibrated deck of 2026-09-15 gave g 0.067-0.075).
+    assert g == pytest.approx(0.072, abs=0.005), f"GW effectiveness g {g} != ~0.072"
     assert L == pytest.approx(0.180, abs=0.02), f"soil-loading L {L} != ~0.180"
 
 

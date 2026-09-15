@@ -16,8 +16,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # The surface-water column of the FINAL leg (soil-loading scale 2.75 on the corrected assignment, 2000-2024 record, window
 # 2017-2019; research/sw_rerun/results-2026-09-15/sweep/READOUT.md) is the committed per-channel CSV below; the seven
-# mainstem stations (channels 26, 18, 15, 11, 10, 2, 1, upstream to downstream) are passed to the joint fit, which
-# otherwise fits the reviewed column (scale 0.11, one-year run) and returns the reviewed g of 0.061.
+# mainstem stations (channels 26, 18, 15, 11, 10, 2, 1, upstream to downstream) are passed to the joint fit explicitly;
+# the script's own default is the same column (the reviewed column, g 0.061, only with --reviewed-column).
 SW_CSV="$PAPER_ROOT/research/sw_rerun/results-2026-09-15/sweep/channel_pfos_sx25_w1719.csv"
 [ -f "$SW_CSV" ] || die "recalibrated surface-water column not found: $SW_CSV"
 SW_MOD="$("$PYTHON" - "$SW_CSV" <<'PY'
