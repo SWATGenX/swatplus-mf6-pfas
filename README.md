@@ -157,8 +157,9 @@ bash scripts/run_flow_calibration.sh      # prints the setup + pestpp-ies comman
    model's own in-stream concentration and the observations, so the share is not a
    model prediction.
 
-**What regenerates from where in `research/`** (the Zenodo v2 deposit carries these three directories' git-tracked
-files, 2026-09-15):
+**What regenerates from where in `research/`** (the Zenodo v2 deposit carries the git-tracked files of six directories,
+`research/sw_rerun/`, `research/kf_derivation/`, `research/oc_unit/`, `research/source_off/`, `research/plume_skill/` and
+`research/north_kent/`, plus `phase3/jfstruct.py` with its inputs and `research/_paths.py`, 2026-09-15):
 
 - `research/sw_rerun/` — **the final surface-water leg.** `make_sweep_decks.py`, `make_ensemble_decks.py` and
   `make_depub_deck.py` build the SWAT+ decks; `run_experiment.sh` runs them (on AWS in the published run);
@@ -170,6 +171,55 @@ files, 2026-09-15):
   `make_sensitivity_decks.py` writes the sensitivity decks' `pfas_hru.ini` files.
 - `research/oc_unit/` — **the organic-carbon unit sensitivity.** `oc_unit_sensitivity.py`, with its 2026-09-14 output
   `oc_unit_sensitivity_2026-09-14.txt`.
+- `research/north_kent/` — **the North Kent facilities' location test the cover letter cites.** `point_in_basin.py test`
+  reads the committed `north_kent_points.csv`, the watershed boundary and `rivs1`, and writes
+  `north_kent_point_in_basin.txt`.
+
+**Paths inside this deposit.** The research scripts name model inputs by their paper-repository path,
+`reproducibility/models/...`. In this deposit the `reproducibility/` directory is the archive root, so the same file is
+`models/...`. The scripts resolve both layouts through `research/_paths.py` (`build_sw_rerun_bundle.sh` applies the same
+rule in shell) and stop with an error naming both paths when neither exists. Run them from the archive root, in the
+environment of `environment.yml`.
+
+**Which research scripts run from this deposit alone** (measured 2026-09-15 from an unzipped deposit; every output
+below reproduced byte-identical; paths under `research/sw_rerun/results-2026-09-15/` are abbreviated `R/`):
+
+- `research/north_kent/point_in_basin.py test` → `research/north_kent/north_kent_point_in_basin.txt`
+- `research/sw_rerun/biosolid_load_scale.py` → `R/biosolid_load_scale.txt`
+- `research/sw_rerun/deposition_schedule.py --T 12 --sweep-json R/sweep/readout_sweep.json` →
+  `R/depyear_prep/deposition_schedule_T12.txt`
+- `phase3/jfstruct.py fit` → `phase3/jfstruct_output.txt`
+- `research/kf_derivation/fit_kf_relation.py --umeh-unit ug/kg --target kd100` → `research/kf_derivation/fit_summary.json`
+- `research/sw_rerun/ensemble_partials.py R/ensemble/ensemble_params_alive.csv R/ensemble/ensemble_conc_w1719.csv
+  R/ensemble_prep/ensemble_params_sx25.csv` → `R/ensemble/ensemble_partials.txt`
+- `research/sw_rerun/ensemble_width_census.py R/ensemble/ensemble_conc_w1719.csv` → `R/ensemble/ensemble_width_census.txt`
+- `research/sw_rerun/register_ensemble.py R/sweep R/ensemble_prep/ensemble_params_sx25.csv
+  R/ensemble_prep/ua_figures_control_ua_metrics.txt` → `R/ensemble_prep/register_ensemble.txt`
+- `research/sw_rerun/si_param_table_from_ensemble.py R/ensemble/figures/ua_param_table.tex R/ensemble/ensemble_partials.txt
+  <out.tex>` → the SI parameter table (`paper/si_param_table.tex` in the paper repository)
+- `research/sw_rerun/si_perreach_table_from_csv.py R/sweep/channel_pfos_sx25_w1719.csv <out.tex>
+  R/ensemble/si_perreach_envelope.csv` → Table S1's per-reach table (`paper/si_perreach_table.tex`)
+
+**Which need inputs this deposit does not carry** (the missing input named first):
+
+- **the SWAT+ daily channel output `channel_pfas_day.txt` of each deck** (about 1.2 GB per deck; the deposit carries its
+  md5 as `channel_pfas_day.md5`): `sw_rerun/channel_pfos_from_dayfile.py`, `column_windows.py`,
+  `depyear_superposition.py`, `ensemble_readout.py`, `readout_depyear.py`, `readout_sw_rerun.py`, `readout_sweep.py`,
+  `register_deps14.py`, `register_depyear_scale.py`, and the `extract` mode of `phase3/jfstruct.py`.
+- **the run's regenerated `pfas_hru.ini` and deck directories** (with that run's `pfas_hru_aa.txt` or `pfas.dat` where
+  used): `kf_derivation/make_sensitivity_decks.py`, `sw_rerun/make_sweep_decks.py`, `make_depub_deck.py`,
+  `make_depyear_decks.py`, `make_ensemble_decks.py`, `register_sweep.py`, `register_depub.py`, `soil_pool_prior.py`.
+- **the SWATGenX platform's `SWATGenX/pfas` module**: `kf_derivation/register_directions.py`,
+  `oc_unit/oc_unit_sensitivity.py`.
+- **the Umeh et al. (2021) supplementary PDF** (a publisher file, not redistributed) and `pdftotext`:
+  `kf_derivation/parse_umeh2021_tableS1.py`.
+- **the paper repository's `paper/_si_cache/si_gw_obs.npz`, `si_mf6_grid.npz` and `pest/rogue/control.3.base.rei`**:
+  `plume_skill/plume_skill_test.py`.
+- **the platform's Rogue model directory, the `mf6` binary and the returned run results**: `source_off/build_source_off.py`,
+  `readout_source_off.py`, `sft_station_check.py`.
+- **a dispatched run bundle** (engine binary, runtime libraries, decks; they run on the compute instance):
+  `source_off/run_experiment.sh`, `sw_rerun/run_experiment.sh`, `reduce_deck.sh`, and `build_sw_rerun_bundle.sh`, which
+  also needs the `run_rogue` model inputs and the engine build.
 
 ---
 
