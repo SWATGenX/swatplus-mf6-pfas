@@ -24,7 +24,7 @@ surface-water + groundwater PFAS mass balance on one watershed.
 |---|---|
 | **Groundwater flow model** | MODFLOW 6, **~24,900 active cells**, SFR network of **1,506 reaches** built from the SWAT+ channel graph; generated automatically by MODGenX from public data |
 | **Flow calibration** (PEST++ ies, 243 pilot points + baseflow constraint) | head **RMSE 5.6 m**, **bias +0.9 m** (modelled minus observed) over **5,383** per-cell water-table observations spanning 125 m of head (Nash–Sutcliffe 0.91); baseflow **+5.46** vs observed **5.56 m³/s** |
-| **GW transport** (MODFLOW 6 GWT, Freundlich sorption) | compared with the **846 measured groundwater PFOS** observations (aggregated to 73 cells): the simulated House Street plume **spans the observed range** above the 10 ng/L background up to the prescribed source concentration and shows **no cell-level skill** (19 of 63 predicted cells are observed below the lowest simulated value, 9.3 ng/L, excluding two cells beside the prescribed source whose depth-maxima are set by numerical undershoot, disclosed in the manuscript's Supplementary Section S2.3); SFT carries the discharged PFOS into the SFR network |
+| **GW transport** (MODFLOW 6 GWT, Freundlich sorption) | compared with PFOS measured at **846 groundwater wells** (477 with a detection, aggregated to the **73 grid cells with a detection**; `research/plume_skill/nondetect_cells.txt` counts the 36 cells whose wells are all non-detects): the simulated House Street plume **spans the observed range** above the 10 ng/L background up to the prescribed source concentration and shows **no cell-level skill** (19 of 63 predicted cells are observed below the lowest simulated value, 9.3 ng/L, excluding two cells beside the prescribed source whose depth-maxima are set by numerical undershoot, disclosed in the manuscript's Supplementary Section S2.3); SFT carries the discharged PFOS into the SFR network |
 | **Joint SW+GW fit** (NNLS over 7 mainstem reaches) | a **fitted partition** of the in-stream PFOS signal, not a transport-model prediction of in-stream concentration: groundwater scale **g = 0.072** (95 % CI 0.038–0.105), surface multiplier **1.64** on the recalibrated column (L = 0.180 against the reference 0.11); the fitted groundwater share is 11–12 % at the five upstream stations and 62–65 % at the two lowest, a step at the plume rather than a gradient |
 
 **Coupling:** MODFLOW 6 **GWF6–GWT6** exchange via the BMI/XMI API; **SFR**
@@ -53,7 +53,7 @@ reproducibility/
 │   │   ├── swat/
 │   │   │   ├── MODFLOW_sfr/   as-built GWF deck (MODGenX output) + grid centroids
 │   │   │   └── TxtInOut/      SWAT+ engine text inputs
-│   │   ├── data/              obs tables (PFOS, heads) + rivs1 channel shapefile + centroids
+│   │   ├── data/              obs tables (PFOS, heads) + rivs1 channels + subs1 (the basin) + watershed_boundary (raster clip extent) + centroids
 │   │   └── MANIFEST.txt       file-level listing with sizes
 │   └── rogue_model_bundle.zip the above, zipped (~24 MB; see "Models" below)
 ├── scripts/
@@ -114,7 +114,7 @@ bash scripts/run_flow.sh
 
 # 3. 40-year PFAS groundwater transport + in-stream routing
 bash scripts/run_transport.sh
-#    -> GW plume compared with the 846 obs (73 cells): spans the observed range, no cell-level
+#    -> GW plume compared with the 846 wells (the 73 grid cells with a detection): spans the observed range, no cell-level
 #       skill (the script also prints a log-RMSE and a within-10x fraction as its own diagnostics;
 #       the manuscript does not report them as skill); SFT in-stream loads
 
@@ -148,7 +148,7 @@ bash scripts/run_flow_calibration.sh      # prints the setup + pestpp-ies comman
    `forward_run_rogue.py`, `build_rogue_calibrated.py`).
 3. **MODFLOW 6 GWT** runs Freundlich PFOS transport on that flow field with the
    source prescribed to the measured plume; **SFT** discharges PFAS into the SFR
-   reaches; compared with the 846 GW PFOS obs (`phase3/phase3_rogue_pfas.py`), a comparison
+   reaches; compared with PFOS at the 846 groundwater wells (the 73 grid cells with a detection; `phase3/phase3_rogue_pfas.py`), a comparison
    that establishes the plume's range, not cell-level skill.
 4. The **joint NNLS fit** partitions the in-stream PFOS signal between the
    surface-soil and groundwater pathways, fitting `C_i = (L/L0)·C_SW_i + g·B_i`
@@ -157,9 +157,10 @@ bash scripts/run_flow_calibration.sh      # prints the setup + pestpp-ies comman
    model's own in-stream concentration and the observations, so the share is not a
    model prediction.
 
-**What regenerates from where in `research/`** (the Zenodo v2 deposit carries the git-tracked files of six directories,
-`research/sw_rerun/`, `research/kf_derivation/`, `research/oc_unit/`, `research/source_off/`, `research/plume_skill/` and
-`research/north_kent/`, plus `phase3/jfstruct.py` with its inputs and `research/_paths.py`, 2026-09-15):
+**What regenerates from where in `research/`** (the Zenodo v2 deposit carries the git-tracked files of seven directories,
+`research/sw_rerun/`, `research/kf_derivation/`, `research/oc_unit/`, `research/source_off/`, `research/plume_skill/`,
+`research/north_kent/` and `research/well_coverage/`, plus `phase3/jfstruct.py` with its inputs, `research/_paths.py` and
+`research/_basin.py`, 2026-09-15):
 
 - `research/sw_rerun/` — **the final surface-water leg.** `make_sweep_decks.py`, `make_ensemble_decks.py` and
   `make_depub_deck.py` build the SWAT+ decks; `run_experiment.sh` runs them (on AWS in the published run);
@@ -174,6 +175,12 @@ bash scripts/run_flow_calibration.sh      # prints the setup + pestpp-ies comman
 - `research/north_kent/` — **the North Kent facilities' location test the cover letter cites.** `point_in_basin.py test`
   reads the committed `north_kent_points.csv`, the model basin outline (`subs1`) and `rivs1`, and writes
   `north_kent_point_in_basin.txt`.
+- `research/well_coverage/` — **the groundwater sampling footprint the paper cites (846 wells, distances from the source).**
+  `well_coverage.py run` reads the deposited `models/rogue/data/pfas_gw_assignment.csv` and the committed
+  `well_buckets.csv`, and writes `well_coverage.txt`.
+- `research/plume_skill/nondetect_cells.py` — **the grid cells whose wells are all non-detects.** `run` reads the deposited
+  `models/rogue/data/pfas_gw_PFOS.csv` and the committed per-cell simulated maxima `nondetect_cells_cmax.csv` (extracted from
+  the paper repository's `paper/_si_cache/si_gw_obs.npz`, whose md5 the CSV header carries), and writes `nondetect_cells.txt`.
 
 **Two outlines in `models/rogue/data/`.** `subs1/` is the model basin: the 8 SWAT+ subbasins, 671.1 km² dissolved,
 equal to the contributing area at the `rivs1` outlet. `watershed_boundary/` is NOT the basin: it is the raster clip
@@ -205,6 +212,8 @@ below reproduced byte-identical; paths under `research/sw_rerun/results-2026-09-
   <out.tex>` → the SI parameter table (`paper/si_param_table.tex` in the paper repository)
 - `research/sw_rerun/si_perreach_table_from_csv.py R/sweep/channel_pfos_sx25_w1719.csv <out.tex>
   R/ensemble/si_perreach_envelope.csv` → Table S1's per-reach table (`paper/si_perreach_table.tex`)
+- `research/well_coverage/well_coverage.py run` → `research/well_coverage/well_coverage.txt`
+- `research/plume_skill/nondetect_cells.py run` → `research/plume_skill/nondetect_cells.txt`
 
 **Which need inputs this deposit does not carry** (the missing input named first):
 
