@@ -172,8 +172,14 @@ bash scripts/run_flow_calibration.sh      # prints the setup + pestpp-ies comman
 - `research/oc_unit/` — **the organic-carbon unit sensitivity.** `oc_unit_sensitivity.py`, with its 2026-09-14 output
   `oc_unit_sensitivity_2026-09-14.txt`.
 - `research/north_kent/` — **the North Kent facilities' location test the cover letter cites.** `point_in_basin.py test`
-  reads the committed `north_kent_points.csv`, the watershed boundary and `rivs1`, and writes
+  reads the committed `north_kent_points.csv`, the model basin outline (`subs1`) and `rivs1`, and writes
   `north_kent_point_in_basin.txt`.
+
+**Two outlines in `models/rogue/data/`.** `subs1/` is the model basin: the 8 SWAT+ subbasins, 671.1 km² dissolved,
+equal to the contributing area at the `rivs1` outlet. `watershed_boundary/` is NOT the basin: it is the raster clip
+extent, the subbasins' bounding box plus 250 m (1,242.2 km²), written by `SWATGenX/generate_swatplus_rasters.py`
+(`create_watershed_boundary()`) to clip the DEM, land-use and soil rasters. The figures draw it only as a map frame; any
+inside/outside or distance-to-edge test uses `subs1`.
 
 **Paths inside this deposit.** The research scripts name model inputs by their paper-repository path,
 `reproducibility/models/...`. In this deposit the `reproducibility/` directory is the archive root, so the same file is

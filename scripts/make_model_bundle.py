@@ -21,7 +21,8 @@ What goes in (all *inputs*, no outputs):
   flow/        MODFLOW 6 GWF steady flow inputs (calibrated, MODFLOW_sfr_cal)
   transport/   MODFLOW 6 GWT PFAS transport inputs (pfas.*) + the GWF deck it couples to
   swat/        the as-built MODFLOW_sfr deck + SWAT+ TxtInOut + supporting geodata
-  data/        observation tables + the rivs1 channel shapefile + grid centroids
+  data/        observation tables + the rivs1 channel shapefile + subs1 (the model basin, 671.1 km2) +
+               watershed_boundary (the raster clip extent, not the basin) + grid centroids
 """
 import os
 import sys
@@ -211,10 +212,17 @@ def main():
     _, b = copy_glob([f"{WA}/Watershed/Shapes/rivs1.*"],
                      os.path.join(DST, "data", "rivs1"), "channel network shapefile (rivs1)")
     total += b
-    # The watershed outline the coupling paper's Fig. 3 (paper/make_fig3_instream_map.py, ROGUE_SHAPES=<dir>) draws
-    # under the channel network. Without it the figure cannot be regenerated from the deposit (Q645, 2026-09-14).
+    # The raster CLIP EXTENT, not the basin: SWATGenX/generate_swatplus_rasters.py:242 create_watershed_boundary()
+    # writes the subbasins' bounding box + 250 m (1,242.2 km2 for the Rogue) to clip the DEM, land-use and soil rasters.
+    # The coupling paper's Fig. 3 (paper/make_fig3_instream_map.py, ROGUE_SHAPES=<dir>) draws it as the map frame under
+    # the channel network, so the figure needs it (Q645, 2026-09-14; described correctly 2026-09-15, Lane X's provenance).
     _, b = copy_glob([f"{WA}/Watershed/Shapes/watershed_boundary.*"],
-                     os.path.join(DST, "data", "watershed_boundary"), "watershed boundary shapefile")
+                     os.path.join(DST, "data", "watershed_boundary"), "raster clip extent (watershed_boundary)")
+    total += b
+    # The MODEL BASIN outline: the 8 SWAT+ subbasins, dissolved 671.1 km2 = the rivs1 outlet's contributing area.
+    # research/north_kent/point_in_basin.py (via research/_basin.py) tests locations against it (Lane P 2026-09-15 18:29).
+    _, b = copy_glob([f"{WA}/Watershed/Shapes/subs1.*"],
+                     os.path.join(DST, "data", "subs1"), "SWAT+ subbasins (subs1, the model basin outline)")
     total += b
     _, b = copy_glob([f"{SRC}/Grids_MODFLOW_centroids.parquet"],
                      os.path.join(DST, "data"), "grid centroids (georeference)")
