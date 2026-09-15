@@ -156,6 +156,20 @@ bash scripts/run_flow_calibration.sh      # prints the setup + pestpp-ies comman
    model's own in-stream concentration and the observations, so the share is not a
    model prediction.
 
+**What regenerates from where in `research/`** (the Zenodo v2 deposit carries these three directories' git-tracked
+files, 2026-09-15):
+
+- `research/sw_rerun/` — **the final surface-water leg.** `make_sweep_decks.py`, `make_ensemble_decks.py` and
+  `make_depub_deck.py` build the SWAT+ decks; `run_experiment.sh` runs them (on AWS in the published run);
+  `readout_sw_rerun.py`, `readout_sweep.py` and `ensemble_readout.py` write the readouts under
+  `results-2026-09-15/`, each with its `READOUT.md`; the `joint_calibration.npz` files there are the joint fits
+  those readouts cite.
+- `research/kf_derivation/` — **the Freundlich k_f relation the SI cites.** `parse_umeh2021_tableS1.py` writes
+  `umeh2021_tableS1.csv`; `fit_kf_relation.py` fits `sorption_data.csv` (summary in `fit_summary.json`);
+  `make_sensitivity_decks.py` writes the sensitivity decks' `pfas_hru.ini` files.
+- `research/oc_unit/` — **the organic-carbon unit sensitivity.** `oc_unit_sensitivity.py`, with its 2026-09-14 output
+  `oc_unit_sensitivity_2026-09-14.txt`.
+
 ---
 
 ## Models
