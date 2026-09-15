@@ -72,7 +72,8 @@ reproducibility/
 The analysis code itself (the `phase3/` transport + joint-calibration scripts and
 the `pest/` PEST++ setup) lives one level up, in the paper repository root that
 contains this `reproducibility/` directory. The run scripts here invoke those
-scripts; they are the authoritative implementation and are not duplicated.
+scripts; they are the authoritative implementation and are not duplicated, with one exception:
+`phase3/jfstruct.py` and its inputs are included because the Discussion's depletion numbers come from it.
 
 ---
 
