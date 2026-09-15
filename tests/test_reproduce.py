@@ -4,7 +4,7 @@ These assert the *headline numbers* of the manuscript within tolerance:
 
   1. test_flow_calibration   -- the calibrated steady GWF run reproduces head NSE ~0.91,
                                 RMSE ~5.6 m, baseflow ~+5.46 m3/s (~58 s).
-  2. test_joint_calibration  -- joint_sw_gw_calibration.py reproduces g ~ 0.061 and
+  2. test_joint_calibration  -- joint_sw_gw_calibration.py on the final surface-water column reproduces g ~ 0.072 and
                                 soil-loading L ~ 0.077 (fast; reads the GWT result).
 
 They require the model workspace ($SWATGENX_ROGUE_DIR), mf6, and the flopy/scipy stack.
@@ -34,9 +34,9 @@ def _have_workspace():
     return os.path.isdir(os.path.join(ROGUE, "MODFLOW_sfr"))
 
 
-def _run(script_dir, script):
-    """Run an analysis script, return its stdout (raises on non-zero exit)."""
-    r = subprocess.run([PY, script], cwd=script_dir, capture_output=True, text=True)
+def _run(script_dir, script, *args):
+    """Run an analysis script (with optional arguments), return its stdout (raises on non-zero exit)."""
+    r = subprocess.run([PY, script, *args], cwd=script_dir, capture_output=True, text=True)
     if r.returncode != 0:
         raise RuntimeError(f"{script} failed:\n{r.stdout}\n{r.stderr}")
     return r.stdout
@@ -58,20 +58,27 @@ def test_flow_calibration():
 
 @pytest.mark.skipif(not _have_workspace(), reason="Rogue model workspace not available")
 def test_joint_calibration():
-    """joint_sw_gw_calibration.py reproduces g ~ 0.061 and soil-loading L ~ 0.077."""
+    """joint_sw_gw_calibration.py on the FINAL leg's surface-water column reproduces g ~ 0.072 and L ~ 0.180
+    (research/sw_rerun/results-2026-09-15/sweep/jointfit/sx25_w1719_stats.txt). Broken build: the reviewed column
+    (no --sw-mod) returns g 0.061 / L 0.077, outside both tolerances."""
+    import csv, tempfile
     pytest.importorskip("flopy")
     pytest.importorskip("geopandas")
     if not os.path.isfile(os.path.join(ROGUE, "rogue_pfas_results.npz")):
         pytest.skip("GWT transport result (rogue_pfas_results.npz) not present -- "
                     "run scripts/run_transport.sh first")
-    out = _run(os.path.join(PAPER, "phase3"), "joint_sw_gw_calibration.py")
+    sw_csv = os.path.join(PAPER, "research", "sw_rerun", "results-2026-09-15", "sweep", "channel_pfos_sx25_w1719.csv")
+    cp = {int(r["Channel"]): float(r["pfos_ngL"]) for r in csv.DictReader(open(sw_csv))}
+    sw_mod = ",".join(f"{cp[c]:.4f}" for c in (26, 18, 15, 11, 10, 2, 1))
+    out_dir = tempfile.mkdtemp(prefix="joint_calibration_")
+    out = _run(os.path.join(PAPER, "phase3"), "joint_sw_gw_calibration.py", "--sw-mod", sw_mod, "--out-dir", out_dir, "--label", "test")
     print(out)
-    npz = "/tmp/joint_calibration.npz"
+    npz = os.path.join(out_dir, "joint_calibration.npz")
     assert os.path.isfile(npz), "joint_calibration.npz not written"
     d = np.load(npz)
     g, L = float(d["g"]), float(d["L"])
-    assert g == pytest.approx(0.061, abs=0.02), f"GW effectiveness g {g} != ~0.061"
-    assert L == pytest.approx(0.077, abs=0.02), f"soil-loading L {L} != ~0.077"
+    assert g == pytest.approx(0.072, abs=0.01), f"GW effectiveness g {g} != ~0.072"
+    assert L == pytest.approx(0.180, abs=0.02), f"soil-loading L {L} != ~0.180"
 
 
 if __name__ == "__main__":

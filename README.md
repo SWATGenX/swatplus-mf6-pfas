@@ -25,7 +25,7 @@ surface-water + groundwater PFAS mass balance on one watershed.
 | **Groundwater flow model** | MODFLOW 6, **~24,900 active cells**, SFR network of **1,506 reaches** built from the SWAT+ channel graph; generated automatically by MODGenX from public data |
 | **Flow calibration** (PEST++ ies, 243 pilot points + baseflow constraint) | head **RMSE 5.6 m**, **bias +0.9 m** (modelled minus observed) over **5,383** per-cell water-table observations spanning 125 m of head (Nash–Sutcliffe 0.91); baseflow **+5.46** vs observed **5.56 m³/s** |
 | **GW transport** (MODFLOW 6 GWT, Freundlich sorption) | compared with the **846 measured groundwater PFOS** observations (aggregated to 73 cells): the simulated House Street plume **spans the observed range** above the 10 ng/L background up to the prescribed source concentration and shows **no cell-level skill** (19 of 63 predicted cells are observed below the lowest simulated value, 9.3 ng/L, excluding two cells beside the prescribed source whose depth-maxima are set by numerical undershoot, disclosed in the manuscript's Supplementary Section S2.3); SFT carries the discharged PFOS into the SFR network |
-| **Joint SW+GW fit** (NNLS over 7 mainstem reaches) | a **fitted partition** of the in-stream PFOS signal, not a transport-model prediction of in-stream concentration: groundwater scale **g = 0.061**, soil-loading scale **L = 0.077**; the fitted groundwater share is 8–13 % at the five upstream stations and 53–55 % at the two lowest, a step at the plume rather than a gradient |
+| **Joint SW+GW fit** (NNLS over 7 mainstem reaches) | a **fitted partition** of the in-stream PFOS signal, not a transport-model prediction of in-stream concentration: groundwater scale **g = 0.072** (95 % CI 0.038–0.105), surface multiplier **1.64** on the recalibrated column (L = 0.180 against the reference 0.11); the fitted groundwater share is 11–12 % at the five upstream stations and 62–65 % at the two lowest, a step at the plume rather than a gradient |
 
 **Coupling:** MODFLOW 6 **GWF6–GWT6** exchange via the BMI/XMI API; **SFR**
 (streamflow routing) + **SFT** (streamflow transport) carry the
@@ -62,10 +62,10 @@ reproducibility/
 │   ├── make_model_bundle.py   (re)assemble models/rogue from the workspace + zip it
 │   ├── run_flow.sh            steady GWF flow → head RMSE 5.6 m, bias +0.9 m (NSE 0.91), baseflow +5.46 (~58 s)
 │   ├── run_transport.sh       40-yr GWT PFAS transport → plume range comparison + SFT
-│   ├── run_joint_calibration.sh  joint SW+GW NNLS → g = 0.061
+│   ├── run_joint_calibration.sh  joint SW+GW NNLS on the final surface-water column → g = 0.072
 │   └── run_flow_calibration.sh   (optional/heavy) PEST++ ies flow inversion setup + command
 └── tests/
-    ├── test_reproduce.py      pytest: flow RMSE 5.6 m / NSE 0.91 + joint g ≈ 0.061 within tolerance
+    ├── test_reproduce.py      pytest: flow RMSE 5.6 m / NSE 0.91 + joint g ≈ 0.072, L ≈ 0.180 within tolerance
     └── smoke_test.sh          shell equivalent (graceful SKIP if workspace/mf6 absent)
 ```
 
@@ -119,7 +119,10 @@ bash scripts/run_transport.sh
 
 # 4. Joint surface-water + groundwater calibration  (fast)
 bash scripts/run_joint_calibration.sh
-#    -> GW effectiveness g ~ 0.061; soil-loading L ~ 0.077; mainstem log-RMSE ~0.07 dex
+#    -> on the FINAL surface-water column (soil-loading scale 2.75, 2000-2024 record, 2017-2019 window;
+#       research/sw_rerun/results-2026-09-15/sweep/channel_pfos_sx25_w1719.csv; 20-reach log-RMSE 0.424 dex):
+#       GW effectiveness g ~ 0.072 (95 % CI 0.038-0.105); surface multiplier 1.64 (L ~ 0.180);
+#       mainstem log-RMSE surface-only ~0.41 -> joint ~0.06 dex; held-out RMSE 7.4 -> 4.5 ng/L
 
 # 5. Tests (assert the headline numbers within tolerance)
 pytest -q tests/test_reproduce.py         # or: bash tests/smoke_test.sh
@@ -207,9 +210,9 @@ SWAT+ `TxtInOut` ~68 MB, observation/geometry data ~1 MB.
   posterior realization from `pest/rogue/control.3.par.csv`. Re-running the ies from
   scratch (`run_flow_calibration.sh`) produces a *new* ensemble; the committed
   posterior is what reproduces head RMSE 5.6 m / NSE 0.91 exactly.
-- **`/tmp/joint_calibration.npz`** is written to world-writable `/tmp` (a stale file from
-  another user should be removed first); the committed copy the manuscript figures read is
-  `research/multianalyte_spike/joint_calibration_rogue.npz`, written by the same script.
+- **`joint_calibration.npz`** is written to `results/joint_calibration/` (`JOINT_OUT_DIR` overrides it); the
+  committed copy the manuscript figures and Table S4 read is `research/multianalyte_spike/joint_calibration_rogue.npz`
+  (g 0.0717, L 0.1804, the final leg), written by the same script when run without `--out-dir`.
 - **SWAT+ in-stream PFAS** is an engine add-on built with `ifx -O3`; a stock SWAT+
   binary runs the `TxtInOut` deck but does not emit the channel-PFAS outputs. The
   groundwater half of this repo (MODFLOW 6) is fully reproducible with stock USGS
